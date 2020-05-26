@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <title>SQS Messages</title>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg  navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">Silverstreet</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+      aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a class="nav-item nav-link active" href="/messages/view">Messages <span class="sr-only">(current)</span></a>
+        <a class="nav-item nav-link" href="/messages/documentation" target="_blank">Documentation</a>
+
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown"
+              aria-haspopup="true" aria-expanded="false">
+              Endpoints
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+              <a target="_blank" class="dropdown-item" href="/messages">Pop message</a>
+              <a target="_blank" class="dropdown-item" href="/messages/list">List messages</a>
+            </div>
+          </li>
+        </ul>
+
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5 p-5" id="app">
+    <div class="bg-light rounded shadow-sm">
+      <form class="form-inline" @submit.prevent="addNewMessage()" method="POST" action="/messages" target="_blank">
+        <div class="form-group p-2 mb-2">
+          <label for="inputPassword2" class="small text-muted mr-2">Enter test message to push</label>
+          <input type="text" name="message" v-model="message" class="form-control mr-1" required id="inputPassword2"
+            placeholder="Enter message to push to queue">
+        </div>
+        <button type="submit" class="btn btn-default text-muted border mb-2">Push to Queue</button>
+      </form>
+    </div>
+
+    <br>
+
+    <div v-if="!messages.length" class="alert alert-info small shadow-sm pt-1 pl-2 pb-1 alert-dismissible fade show"
+      role="alert">
+      <strong>Empty!</strong> Message list is currently empty
+    </div>
+    <template v-else>
+      <h2 class="pb-4 text-muted">Messages
+        <span class="float-right small" style="cursor: pointer">
+          <i class="fa fa-refresh" @click="fetchMessagesDom"></i>
+        </span>
+      </h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="small text-muted" scope="col">S/N</th>
+            <th scope="col">Messages</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(message, index) in messages" v-bind:key="(index)">
+            <th class="small text-muted" scope="row">{{(index+1)}}.</th>
+            <td>{{message.Body}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+  </div>
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+  </script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous">
+  </script>
+  <!-- development version, includes helpful console warnings -->
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        message: '',
+        messages: []
+      },
+      mounted: () => {},
+      async created() {
+        try {
+          this.messages = await this.fetchMessages();
+        } catch (error) {
+          console.log(error)
+        }
+      },
+      methods: {
+        async fetchMessages() {
+          return new Promise((yeap, nope) => {
+            fetch("/messages/list", {
+                method: "GET",
+                headers: new Headers({
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                })
+              })
+              //Add authentication
+              .then(res => res.json())
+              .then(response => {
+                yeap(response.data);
+              })
+              .catch(err => {
+                // console.log(err);
+                nope(err);
+              });
+          });
+        },
+
+        async fetchMessagesDom() {
+          try {
+            this.messages = await this.fetchMessages();
+          } catch (error) {}
+        },
+
+        addNewMessage() {
+          var myHeaders = new Headers();
+          myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
+          var urlencoded = new URLSearchParams();
+          urlencoded.append("message", this.message);
+          var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: urlencoded
+          };
+          fetch("/messages", requestOptions)
+            .then(response => response.text())
+            .then(async result => {
+              try {
+                this.messages = await this.fetchMessages();
+                this.message = ''
+              } catch (error) {}
+            })
+            .catch(error => console.log('error', error));
+        }
+
+
+      }
+    })
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "silverstreet",
+  "version": "1.0.0",
+  "description": "Code assignment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "JAy",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.683.0",
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "PORT": 3001,
+  "SQS_URL": "https://sqs.ap-southeast-1.amazonaws.com/056297091169/silverstreet-SilverStreetSQS-14S3U43VZFCAP"
+}
